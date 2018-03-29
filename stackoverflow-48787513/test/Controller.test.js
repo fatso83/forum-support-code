@@ -1,6 +1,11 @@
 const { expect } = require("chai");
 const sinon = require("sinon");
-const Controller = require("../src/Controller");
+const proxyquire = require("proxyquire");
+
+class MyFakeService {}
+const Controller = proxyquire("../src/Controller", {
+  "./Service": MyFakeService
+});
 
 describe("Controller", () => {
   let sandbox;
@@ -14,14 +19,11 @@ describe("Controller", () => {
   });
 
   it("should use fake get function", () => {
-    class MyFakeService {
-      get() {
-        return "Fake has been called";
-      }
-    }
-
     const id = 123;
-    Controller.__setServiceClass(MyFakeService);
+    const stub = sinon.stub();
+    stub.returns("Fake has been called");
+
+    MyFakeService.prototype.get = stub;
 
     const result = Controller.get(id);
     expect(result).to.equal("Fake has been called");
